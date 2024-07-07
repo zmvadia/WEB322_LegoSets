@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lego Collection</title>
+    <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+    <%- include('partials/navbar', { page: page }) %>
+    <div class="container mx-auto p-4">
+        <div class="hero min-h-[50vh] bg-cover bg-center bg-auto" style="background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/LEGO_logo.svg/1200px-LEGO_logo.svg.png); background-size: contain;">
+            <div class="hero-overlay bg-opacity-60"></div>
+            <div class="hero-content text-center text-neutral-content">
+                <div class="max-w-md">
+                    <h1 class="text-5xl font-bold">Hello there</h1>
+                    <p class="py-6">Welcome to Lego Collection where you can explore your creative building skills.</p>
+                    <a href="/lego/sets" class="btn btn-primary">Explore Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="container mx-auto p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="card bg-base-100 shadow-xl">
+            <figure>
+                <img class="w-full h-[300px]" src="https://cdn.rebrickable.com/media/sets/0241357594-1.jpg" alt="Star Wars" />
+            </figure>
+            <div class="card-body">
+                <h2 class="card-title">Star Wars: Build Your Own Adventure: Galactic Missions</h2>
+                <p>Classic Star Wars - released in 2019</p>
+                <div class="card-actions justify-end">
+                    <a href="/lego/sets/0241357594-1" class="btn btn-primary">Details</a>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="card bg-base-100 shadow-xl">
+            <figure>
+                <img class="w-full h-[300px]" src="https://cdn.rebrickable.com/media/sets/010423-1.jpg" alt="Horse" />
+            </figure>
+            <div class="card-body">
+                <h2 class="card-title">The Majestic Horse</h2>
+                <p>Limited Edition April Fools prank set.</p>
+                <div class="card-actions justify-end">
+                    <a href="/lego/sets/010423-1" class="btn btn-primary">Details</a>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="card bg-base-100 shadow-xl">
+            <figure>
+                <img class="w-full h-[300px]" src="https://cdn.rebrickable.com/media/sets/032-1.jpg" alt="Livingroom" />
+            </figure>
+            <div class="card-body">
+                <h2 class="card-title">Living Room</h2>
+                <p>Classic play set - released in 1979</p>
+                <div class="card-actions justify-end">
+                    <a href="/lego/sets/032-1" class="btn btn-primary">Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+</html>
