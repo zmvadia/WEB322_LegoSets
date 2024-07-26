@@ -1,6 +1,6 @@
 /********************************************************************************
 
-* WEB322 – Assignment 04
+* WEB322 – Assignment 05
 
 *
 
@@ -14,11 +14,11 @@
 
 *
 
-* Name: Zainab Mustak Vadia Student ID: 119574234 Date: 07/07/2024
+* Name: Zainab Mustak Vadia Student ID: 119574234 Date: 07/26/2024
 
 *
 
-* Published URL: https://vercel.com/zainab-mustak-vadias-projects/playground-ai-web322
+* Published URL:
 
 *
 
@@ -33,6 +33,8 @@ const port = 8080;
 app.use(express.static(__dirname + '/public'));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
+require('pg'); // explicitly require the "pg" module
+const Sequelize = require('sequelize');
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res, next) => {
