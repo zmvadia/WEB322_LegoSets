@@ -9,7 +9,7 @@
 <body>
     <%- include('partials/navbar', { page: "" }) %>
     <div class="container mx-auto p-4">
-        <div class="hero h-[50vh] bg-base-200">
+        <div class="hero h-[30vh] bg-base-200">
             <div class="hero-content text-center">
               <div class="max-w-md">
                 <h1 class="text-5xl font-bold"><%= set.name%></h1>
@@ -29,15 +29,16 @@
                 <ul class="mt-4 space-y-2">
                     <li><strong>Name:</strong> <%= set.name %></li>
                     <li><strong>Year:</strong> <%= set.year %></li>
-                    <li><strong>Theme:</strong> <%= set.theme %></li>
+                    <li><strong>Theme:</strong> <%= set.Theme.name %></li>
                     <li><strong>Number of Parts:</strong> <%= set.num_parts %></li>
                 </ul>
                 <blockquote id="quote" class="mt-4">
                     <p>Loading quote...</p>
                 </blockquote>
-                <div class="flex justify-center mt-4">
+                <div class="flex justify-center mt-4 space-x-4">
+                    <a href="/lego/editSet/<%= set.set_num %>" class="btn btn-sm btn-success">Edit Set: <%= set.name %></a>
                     <a href="#" onclick="history.back();return false;" class="btn btn-sm btn-secondary">Back</a>
-                </div>
+                </div>                
             </div>
         </div>
     </div>

@@ -36,8 +36,8 @@
               <div class="flex items-center">
                 <h2 class="text-lg font-bold"><%= set.name %></h2>
                 <span class="mx-2">|</span> <!-- Separator -->
-                <a href="/lego/sets?theme=<%= set.theme %>" class="btn btn-sm btn-<%= set.theme.toLowerCase() %>">
-                    <%= set.theme %>
+                <a href="/lego/sets?theme=<%= set.theme %>" class="btn btn-sm btn-<%= set.Theme.name.toLowerCase() %>">
+                    <%= set.Theme.name %>
                 </a>
             </div>            
               <p class="text-sm text-black">Year: <%= set.year %></p>

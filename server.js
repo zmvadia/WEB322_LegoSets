@@ -33,50 +33,124 @@ const port = 8080;
 app.use(express.static(__dirname + '/public'));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
+app.use(express.urlencoded({ extended: true }));
 
-    app.get('/', (req, res) => {
+app.get('/', (req, res, next) => {
+    try {
         res.render('home', { page: 'home' });
-    });
+    } catch (error) {
+        next(error);
+    }
+});
 
-    app.get('/about',(req,res) => {
-        res.render(path.join(__dirname,'/views/about.ejs'))
-    });
-    
-    app.get('/lego/sets', (req, res) => {
-        if (req.query.theme) {
+app.get('/about', (req, res) => {
+    res.render(path.join(__dirname, '/views/about.ejs'));
+});
 
-            legoData.getSetsByTheme(req.query.theme)
+app.get('/lego/sets', (req, res) => {
+    if (req.query.theme) {
+        legoData.getSetsByTheme(req.query.theme)
             .then(sets => {
-                res.render('sets', {sets: sets});
+                res.render('sets', { sets: sets });
             })
             .catch(error => {
                 res.render('404', { page: '404', message: 'Set not found' });
             });
-        } else {
+    } else {
         legoData.getAllSets()
             .then(sets => {
-                res.render('sets', {sets: sets});
+                res.render('sets', { sets: sets });
             })
             .catch(error => {
                 res.render('404', { page: '404', message: 'Set not found' });
             });
-        }
+    }
+});
 
-    });
+app.get('/lego/addSet', (req, res) => {
+    legoData.getAllThemes()
+       .then((themeData) => {
+            res.render('addSet', { themes: themeData });
+        })
+       .catch((err) => {
+            console.error(err);
+            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err}` });
+        });
+});
 
-    app.get('/lego/sets/:id', (req, res) => {
-        legoData.getSetByNum(req.params.id).then(setData => {
-            res.render('set', {set: setData});
-        }).catch(error => {
+app.post('/lego/addSet', (req, res) => {
+    legoData.addSet(req.body)
+       .then(() => {
+            res.redirect('/lego/sets');
+        })
+       .catch((err) => {
+            console.error(err);
+            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err}` });
+        });
+});
+
+app.get('/lego/editSet/:num', (req, res) => {
+    const setNum = req.params.num;
+    Promise.all([legoData.getSetByNum(setNum), legoData.getAllThemes()])
+        .then(([setData, themeData]) => {
+            res.render('editSet', { themes: themeData, set: setData });
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(404).render('404', { message: `Unable to retrieve data: ${err.message}` });
+        });
+});
+
+app.post('/lego/editSet', (req, res) => {
+    const { set_num } = req.body;
+    legoData.editSet(set_num, req.body)
+        .then(() => {
+            res.redirect('/lego/sets');
+        })
+        .catch((err) => {
+            console.error(err);
+            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err.message}` });
+        });
+});
+
+app.get('/lego/sets/:id', (req, res) => {
+    legoData.getSetByNum(req.params.id)
+        .then(setData => {
+            res.render('set', { set: setData });
+        })
+        .catch(error => {
             res.render('404', { page: '404', message: 'Set not found' });
-            });   
-    });
-    
-    app.get('*', (req, res) => {
-        res.status(404).render('404', { page: '404' });
-    });    
+        });
+});
 
-    legoData.initialize()
+app.get('/lego/deleteSet/:num', (req, res) => {
+    const setNum = req.params.num;
+    
+    legoData.deleteSet(setNum)
+        .then(() => {
+            res.redirect('/lego/sets');
+        })
+        .catch(err => {
+            console.error(err);
+            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err}` });
+        });
+});
+
+app.use((req, res) => {
+    res.status(404).render('404', { page: '404', message: 'Page not found' });
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).render('404', { page: '404', message: 'Internal Server Error' });
+});
+
+app.get('*', (req, res) => {
+    console.log('Catch-all route hit');
+    res.status(404).send('Not found');
+  });
+
+legoData.initialize()
     .then(() => {
         app.listen(port, () => {
             console.log(`Server running on port ${port}`);
