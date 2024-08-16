@@ -43,7 +43,7 @@ const Sequelize = require('sequelize');
 const clientSessions = require('client-sessions');
 
 app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.urlencoded({ extended: true }));
+
 
 app.use(
     clientSessions({
