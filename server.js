@@ -219,12 +219,9 @@ app.post('/register', (req, res) => {
 
 app.post("/login", (req, res) => {
     req.body.userAgent = req.get('User-Agent');
-    
-    console.log("Login request received for user:", req.body.userName);
 
     authData.checkUser(req.body)
         .then((user) => {
-            console.log("User authenticated successfully:", user.userName);
             
             req.session.user = {
                 userName: user.userName,
