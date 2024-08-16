@@ -46,6 +46,7 @@ mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 const app = express();
 const port = 8080;
 
+require('pg'); 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
