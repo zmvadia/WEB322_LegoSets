@@ -1,20 +1,20 @@
 const mongoose = require('mongoose');
 let Schema = mongoose.Schema;
-const env = require('dotenv')
+const env = require('dotenv');
 env.config();
 const bcrypt = require('bcryptjs');
 
 let userSchema = new Schema({
-    userName : {
-        type : String,
-        unique : true,
+    userName: {
+        type: String,
+        unique: true,
         required: true
     },
-    password : String,
-    email : String,
-    loginHistory : [{
-        dateTime : Date,
-        userAgent : String
+    password: String,
+    email: String,
+    loginHistory: [{
+        dateTime: Date,
+        userAgent: String
     }]
 });
 
@@ -22,7 +22,7 @@ let User;
 
 function initialize() {
     return new Promise(function (resolve, reject) {
-        let db = mongoose.createConnection(process.env.MONGODB);
+        let db = mongoose.createConnection(process.env.MONGODB, { useNewUrlParser: true, useUnifiedTopology: true });
         db.on('error', (err) => {
             reject(err); 
         });
@@ -64,13 +64,13 @@ function registerUser(userData) {
 
 function checkUser(userData) {
     return new Promise((resolve, reject) => {
-        User.findOne({ userName: userData.userName })
-            .then(async (user) => {
-                if (!user) {
-
+        User.find({ userName: userData.userName })
+            .then(async (users) => {
+                if (users.length === 0) {
                     return reject(`Unable to find user: ${userData.userName}`);
                 }
 
+                const user = users[0];
                 const isMatch = await bcrypt.compare(userData.password, user.password);
 
                 if (!isMatch) {
@@ -78,9 +78,9 @@ function checkUser(userData) {
                 }
 
                 if (user.loginHistory.length === 8) {
-                    user.loginHistory.pop();
+                    user.loginHistory.pop(); 
                 }
-                user.loginHistory.unshift({
+                user.loginHistory.unshift({ 
                     dateTime: new Date(),
                     userAgent: userData.userAgent,
                 });
@@ -95,5 +95,4 @@ function checkUser(userData) {
             .catch(err => reject(`Error finding user: ${err}`));
     });
 }
-
-module.exports = {initialize,registerUser,checkUser};
+module.exports = { initialize, registerUser, checkUser };

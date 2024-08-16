@@ -222,7 +222,6 @@ app.post("/login", (req, res) => {
 
     authData.checkUser(req.body)
         .then((user) => {
-            
             req.session.user = {
                 userName: user.userName,
                 email: user.email,
@@ -231,7 +230,6 @@ app.post("/login", (req, res) => {
             res.redirect("/lego/sets");
         })
         .catch((err) => {
-            console.error("Login failed:", err);
 
             res.render("login", { 
                 page: 'login', 
@@ -241,7 +239,6 @@ app.post("/login", (req, res) => {
             });
         });
 });
-
 
 app.get("/logout", (req, res) => {
     req.session.reset();
