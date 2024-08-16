@@ -38,7 +38,7 @@ if (!uri) {
   throw new Error('MONGODB_URI environment variable is not set');
 }
 
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(uri)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -219,9 +219,13 @@ app.post('/register', (req, res) => {
 
 app.post("/login", (req, res) => {
     req.body.userAgent = req.get('User-Agent');
+    
+    console.log("Login request received for user:", req.body.userName);
 
     authData.checkUser(req.body)
         .then((user) => {
+            console.log("User authenticated successfully:", user.userName);
+            
             req.session.user = {
                 userName: user.userName,
                 email: user.email,
@@ -230,6 +234,7 @@ app.post("/login", (req, res) => {
             res.redirect("/lego/sets");
         })
         .catch((err) => {
+            console.error("Login failed:", err);
 
             res.render("login", { 
                 page: 'login', 

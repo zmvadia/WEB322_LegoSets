@@ -64,13 +64,13 @@ function registerUser(userData) {
 
 function checkUser(userData) {
     return new Promise((resolve, reject) => {
-        User.find({ userName: userData.userName })
-            .then(async (users) => {
-                if (users.length === 0) {
+        User.findOne({ userName: userData.userName })
+            .then(async (user) => {
+                if (!user) {
+
                     return reject(`Unable to find user: ${userData.userName}`);
                 }
 
-                const user = users[0];
                 const isMatch = await bcrypt.compare(userData.password, user.password);
 
                 if (!isMatch) {
@@ -78,9 +78,9 @@ function checkUser(userData) {
                 }
 
                 if (user.loginHistory.length === 8) {
-                    user.loginHistory.pop(); 
+                    user.loginHistory.pop();
                 }
-                user.loginHistory.unshift({ 
+                user.loginHistory.unshift({
                     dateTime: new Date(),
                     userAgent: userData.userAgent,
                 });
