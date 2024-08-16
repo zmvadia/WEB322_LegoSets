@@ -67,7 +67,6 @@ app.use(
        activeDuration: 1000 * 60, // the session will be extended by this many ms each request (1 minute)
        })
    );
-   app.use(express.static(__dirname + '/public'));
 
 
 function ensureLogin(req, res, next) {
