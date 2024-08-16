@@ -30,7 +30,6 @@ const express = require('express');
 const legoData = require('./modules/legoSets');
 const path = require('path');
 const authData = require('./modules/auth-service');
-const bodyParser = require('body-parser');
 
 const app = express();
 const port = 8080;
