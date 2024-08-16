@@ -25,150 +25,106 @@
 *
 
 ********************************************************************************/
-
 const express = require('express');
-const legoData = require('./modules/legoSets');
 const path = require('path');
 const bodyParser = require('body-parser');
 const authData = require('./modules/auth-service');
+const legoData = require('./modules/legoSets');
+const Sequelize = require('sequelize');
+const clientSessions = require('client-sessions');
 
 const app = express();
 const port = 8080;
 
-
 app.set('view engine', 'ejs');
-app.set('views', __dirname + '/views');
-
-require('pg'); 
-const Sequelize = require('sequelize');
-const clientSessions = require('client-sessions');
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(
-    clientSessions({
-       cookieName: 'session', // this is the object name that will be added to 'req'
-       secret: 'o6LjQ5EVNC28ZgK64hDELM18ScpFQr', // this should be a long un-guessable string.
-       duration: 2 * 60 * 1000, // duration of the session in milliseconds (2 minutes)
-       activeDuration: 1000 * 60, // the session will be extended by this many ms each request (1 minute)
-       })
-   );
-   app.use(express.static(__dirname + '/public'));
-
+app.use(clientSessions({
+    cookieName: 'session',
+    secret: 'o6LjQ5EVNC28ZgK64hDELM18ScpFQr', // Ensure this is a secure random string
+    duration: 2 * 60 * 1000, // Duration of the session in milliseconds
+    activeDuration: 1000 * 60 // Session will be extended by this many ms each request
+}));
 
 function ensureLogin(req, res, next) {
     if (!req.session.user) {
-      res.redirect('/login');
+        res.redirect('/login');
     } else {
-      next();
+        next();
     }
-  };
-   app.use((req, res, next) => {
+}
+
+app.use((req, res, next) => {
     res.locals.session = req.session;
     next();
-    });
+});
 
-app.get('/', (req, res, next) => {
+app.get('/', (req, res) => {
     try {
         res.render('home', { page: 'home' });
     } catch (error) {
-        next(error);
+        res.status(500).render('500', { page: '500', message: 'Internal Server Error' });
     }
 });
 
 app.get('/about', (req, res) => {
-    res.render(path.join(__dirname, '/views/about.ejs'));
+    res.render('about');
 });
 
 app.get('/lego/sets', (req, res) => {
     if (req.query.theme) {
         legoData.getSetsByTheme(req.query.theme)
-            .then(sets => {
-                res.render('sets', { sets: sets });
-            })
-            .catch(error => {
-                res.render('404', { page: '404', message: 'Set not found' });
-            });
+            .then(sets => res.render('sets', { sets: sets }))
+            .catch(() => res.render('404', { page: '404', message: 'Set not found' }));
     } else {
         legoData.getAllSets()
-            .then(sets => {
-                res.render('sets', { sets: sets });
-            })
-            .catch(error => {
-                res.render('404', { page: '404', message: 'Set not found' });
-            });
+            .then(sets => res.render('sets', { sets: sets }))
+            .catch(() => res.render('404', { page: '404', message: 'Set not found' }));
     }
 });
 
 app.get('/lego/addSet', (req, res) => {
     legoData.getAllThemes()
-       .then((themeData) => {
-            res.render('addSet', { themes: themeData });
-        })
-       .catch((err) => {
-            console.error(err);
-            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err}` });
-        });
+       .then(themeData => res.render('addSet', { themes: themeData }))
+       .catch(err => res.status(500).render('500', { message: `Error: ${err.message}` }));
 });
 
 app.post('/lego/addSet', ensureLogin, (req, res) => {
     legoData.addSet(req.body)
-       .then(() => {
-            res.redirect('/lego/sets');
-        })
-       .catch((err) => {
-            console.error(err);
-            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err}` });
-        });
+       .then(() => res.redirect('/lego/sets'))
+       .catch(err => res.status(500).render('500', { message: `Error: ${err.message}` }));
 });
 
 app.get('/lego/editSet/:num', (req, res) => {
     const setNum = req.params.num;
     Promise.all([legoData.getSetByNum(setNum), legoData.getAllThemes()])
-        .then(([setData, themeData]) => {
-            res.render('editSet', { themes: themeData, set: setData });
-        })
-        .catch((err) => {
-            console.error(err);
-            res.status(404).render('404', { message: `Unable to retrieve data: ${err.message}` });
-        });
+        .then(([setData, themeData]) => res.render('editSet', { themes: themeData, set: setData }))
+        .catch(err => res.status(404).render('404', { message: `Error: ${err.message}` }));
 });
 
 app.post('/lego/editSet', ensureLogin, (req, res) => {
     const { set_num } = req.body;
     legoData.editSet(set_num, req.body)
-        .then(() => {
-            res.redirect('/lego/sets');
-        })
-        .catch((err) => {
-            console.error(err);
-            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err.message}` });
-        });
+        .then(() => res.redirect('/lego/sets'))
+        .catch(err => res.status(500).render('500', { message: `Error: ${err.message}` }));
 });
 
 app.get('/lego/sets/:id', (req, res) => {
     legoData.getSetByNum(req.params.id)
-        .then(setData => {
-            res.render('set', { set: setData });
-        })
-        .catch(error => {
-            res.render('404', { page: '404', message: 'Set not found' });
-        });
+        .then(setData => res.render('set', { set: setData }))
+        .catch(() => res.render('404', { page: '404', message: 'Set not found' }));
 });
 
 app.get('/lego/deleteSet/:num', ensureLogin, (req, res) => {
     const setNum = req.params.num;
-    
     legoData.deleteSet(setNum)
-        .then(() => {
-            res.redirect('/lego/sets');
-        })
-        .catch(err => {
-            console.error(err);
-            res.render('500', { message: `I'm sorry, but we have encountered the following error: ${err}` });
-        });
+        .then(() => res.redirect('/lego/sets'))
+        .catch(err => res.status(500).render('500', { message: `Error: ${err.message}` }));
 });
 
 app.get("/login", (req, res) => {
@@ -180,7 +136,7 @@ app.get("/login", (req, res) => {
     });
 });
 
-  app.get('/register', (req, res) => {
+app.get('/register', (req, res) => {
     const status = req.query.status || '';
     const message = req.query.message || '';
     const userName = req.query.userName || '';
@@ -196,21 +152,15 @@ app.get("/login", (req, res) => {
 
 app.post('/register', (req, res) => {
     const userData = req.body;
-
     authData.registerUser(userData)
-        .then(() => {
-            res.redirect('/register?status=success&message=User%20created%20successfully!'); 
-        })
-        .catch((err) => {
-            res.redirect(`/register?status=error&message=${encodeURIComponent(err.message)}&userName=${encodeURIComponent(userData.userName)}`); 
-        });
+        .then(() => res.redirect('/register?status=success&message=User%20created%20successfully!'))
+        .catch(err => res.redirect(`/register?status=error&message=${encodeURIComponent(err.message)}&userName=${encodeURIComponent(userData.userName)}`));
 });
 
 app.post("/login", (req, res) => {
     req.body.userAgent = req.get('User-Agent');
-
     authData.checkUser(req.body)
-        .then((user) => {
+        .then(user => {
             req.session.user = {
                 userName: user.userName,
                 email: user.email,
@@ -218,17 +168,13 @@ app.post("/login", (req, res) => {
             };
             res.redirect("/lego/sets");
         })
-        .catch((err) => {
-
-            res.render("login", { 
-                page: 'login', 
-                errorMessage: err, 
-                userName: req.body.userName || '',
-                successMessage: '' 
-            });
-        });
+        .catch(err => res.render("login", { 
+            page: 'login', 
+            errorMessage: err.message, 
+            userName: req.body.userName || '',
+            successMessage: '' 
+        }));
 });
-
 
 app.get("/logout", (req, res) => {
     req.session.reset();
@@ -248,21 +194,11 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).render('500', { page: '404', message: 'Internal Server Error' });
+    res.status(500).render('500', { page: '500', message: 'Internal Server Error' });
 });
 
-app.get('*', (req, res) => {
-    console.log('Catch-all route hit');
-    res.status(404).send('Not found');
-  });
 
 legoData.initialize()
     .then(authData.initialize)
-    .then(function () {
-        app.listen(port, function () {
-            console.log(`app listening on: ${port}`);
-        });
-    })
-    .catch(function (err) {
-        console.log(`unable to start server: ${err}`);
-    });
+    .then(() => app.listen(port, () => console.log(`App listening on port ${port}`)))
+    .catch(err => console.log(`Unable to start server: ${err}`));
