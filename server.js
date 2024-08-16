@@ -29,6 +29,7 @@
 const express = require('express');
 const legoData = require('./modules/legoSets');
 const path = require('path');
+const bodyParser = require('body-parser');
 const authData = require('./modules/auth-service');
 
 const app = express();
@@ -43,7 +44,8 @@ const Sequelize = require('sequelize');
 const clientSessions = require('client-sessions');
 
 app.use(express.urlencoded({ extended: true }));
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(
     clientSessions({
