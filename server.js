@@ -32,6 +32,16 @@ const authData = require('./modules/auth-service');
 const legoData = require('./modules/legoSets');
 const Sequelize = require('sequelize');
 const clientSessions = require('client-sessions');
+const mongoose = require('mongoose');
+const uri = process.env.MONGODB; 
+
+if (!uri) {
+  throw new Error('MONGODB_URI environment variable is not set');
+}
+
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 const app = express();
 const port = 8080;
