@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User History</title>
+    <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+    <%- include('partials/navbar', { page: page }) %>
+    <div class="container mx-auto">
+        <div class="hero h-[30vh] bg-base-200">
+            <div class="hero-content text-center">
+                <div class="max-w-md">
+                    <h1 class="text-5xl font-bold"><%= user.userName %></h1>
+                    <p class="py-6">User Email: <%= user.email %></p>
+                </div>
+            </div>
+        </div>   
+        <br>  
+        <div class="login-history">
+            <form>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="font-bold text-lg">Login Date/Time</div>
+                    <div class="font-bold text-lg">Client Information</div>
+                </div>
+
+                <% if (user.loginHistory && user.loginHistory.length > 0) { %>
+                    <% user.loginHistory.forEach(function(history, index) { %>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <input type="text" id="loginDateTime<%= index %>" name="loginDateTime<%= index %>" class="input input-bordered w-full" value="<%= new Date(history.dateTime).toLocaleString() %>" readonly />
+                            <input type="text" id="userAgent<%= index %>" name="userAgent<%= index %>" class="input input-bordered w-full" value="<%= history.userAgent %>" readonly />
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="text-center py-6">
+                        <p>No login history available.</p>
+                    </div>
+                <% } %>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

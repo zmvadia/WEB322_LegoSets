@@ -36,7 +36,9 @@
                     <p>Loading quote...</p>
                 </blockquote>
                 <div class="flex justify-center mt-4 space-x-4">
-                    <a href="/lego/editSet/<%= set.set_num %>" class="btn btn-sm btn-success">Edit Set: <%= set.name %></a>
+                    <% if(session.user){ %>
+                        <a href="/lego/editSet/<%= set.set_num %>" class="btn btn-sm btn-success">Edit Set: <%= set.name %></a>
+                        <% } %>
                     <a href="#" onclick="history.back();return false;" class="btn btn-sm btn-secondary">Back</a>
                 </div>                
             </div>

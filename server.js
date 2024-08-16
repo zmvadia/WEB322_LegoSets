@@ -1,6 +1,8 @@
 /********************************************************************************
 
-* WEB322 – Assignment 05
+
+
+* WEB322 – Assignment 06
 
 *
 
@@ -14,7 +16,7 @@
 
 *
 
-* Name: Zainab Mustak Vadia Student ID: 119574234 Date: 07/26/2024
+* Name: Zainab Mustak Vadia Student ID: 119574234 Date: 16/08/2024
 
 *
 
@@ -23,19 +25,49 @@
 *
 
 ********************************************************************************/
+
 const express = require('express');
 const legoData = require('./modules/legoSets');
 const path = require('path');
+const authData = require('./modules/auth-service');
+const bodyParser = require('body-parser');
 
 const app = express();
 const port = 8080;
 
-app.use(express.static(__dirname + '/public'));
+
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
-require('pg'); // explicitly require the "pg" module
+
+require('pg'); 
 const Sequelize = require('sequelize');
+const clientSessions = require('client-sessions');
+
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(
+    clientSessions({
+       cookieName: 'session', // this is the object name that will be added to 'req'
+       secret: 'o6LjQ5EVNC28ZgK64hDELM18ScpFQr', // this should be a long un-guessable string.
+       duration: 2 * 60 * 1000, // duration of the session in milliseconds (2 minutes)
+       activeDuration: 1000 * 60, // the session will be extended by this many ms each request (1 minute)
+       })
+   );
+   app.use(express.static(__dirname + '/public'));
+
+
+function ensureLogin(req, res, next) {
+    if (!req.session.user) {
+      res.redirect('/login');
+    } else {
+      next();
+    }
+  };
+   app.use((req, res, next) => {
+    res.locals.session = req.session;
+    next();
+    });
 
 app.get('/', (req, res, next) => {
     try {
@@ -80,7 +112,7 @@ app.get('/lego/addSet', (req, res) => {
         });
 });
 
-app.post('/lego/addSet', (req, res) => {
+app.post('/lego/addSet', ensureLogin, (req, res) => {
     legoData.addSet(req.body)
        .then(() => {
             res.redirect('/lego/sets');
@@ -103,7 +135,7 @@ app.get('/lego/editSet/:num', (req, res) => {
         });
 });
 
-app.post('/lego/editSet', (req, res) => {
+app.post('/lego/editSet', ensureLogin, (req, res) => {
     const { set_num } = req.body;
     legoData.editSet(set_num, req.body)
         .then(() => {
@@ -125,7 +157,7 @@ app.get('/lego/sets/:id', (req, res) => {
         });
 });
 
-app.get('/lego/deleteSet/:num', (req, res) => {
+app.get('/lego/deleteSet/:num', ensureLogin, (req, res) => {
     const setNum = req.params.num;
     
     legoData.deleteSet(setNum)
@@ -138,13 +170,84 @@ app.get('/lego/deleteSet/:num', (req, res) => {
         });
 });
 
+app.get("/login", (req, res) => {
+    res.render("login", { 
+        page: 'login', 
+        errorMessage: '', 
+        successMessage: '', 
+        userName: '' 
+    });
+});
+
+  app.get('/register', (req, res) => {
+    const status = req.query.status || '';
+    const message = req.query.message || '';
+    const userName = req.query.userName || '';
+
+    res.render('register', {
+        page: 'register',
+        successMessage: status === 'success' ? message : null,
+        errorMessage: status === 'error' ? message : null,
+        showForm: status !== 'success',
+        userName: userName || ' '
+    });
+});
+
+app.post('/register', (req, res) => {
+    const userData = req.body;
+
+    authData.registerUser(userData)
+        .then(() => {
+            res.redirect('/register?status=success&message=User%20created%20successfully!'); 
+        })
+        .catch((err) => {
+            res.redirect(`/register?status=error&message=${encodeURIComponent(err.message)}&userName=${encodeURIComponent(userData.userName)}`); 
+        });
+});
+
+app.post("/login", (req, res) => {
+    req.body.userAgent = req.get('User-Agent');
+
+    authData.checkUser(req.body)
+        .then((user) => {
+            req.session.user = {
+                userName: user.userName,
+                email: user.email,
+                loginHistory: user.loginHistory
+            };
+            res.redirect("/lego/sets");
+        })
+        .catch((err) => {
+
+            res.render("login", { 
+                page: 'login', 
+                errorMessage: err, 
+                userName: req.body.userName || '',
+                successMessage: '' 
+            });
+        });
+});
+
+
+app.get("/logout", (req, res) => {
+    req.session.reset();
+    res.redirect("/");
+});
+
+app.get("/userHistory", ensureLogin, (req, res) => {
+    res.render("userHistory", { 
+        page: 'userHistory',
+        user: req.session.user 
+    });
+});
+
 app.use((req, res) => {
     res.status(404).render('404', { page: '404', message: 'Page not found' });
 });
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).render('404', { page: '404', message: 'Internal Server Error' });
+    res.status(500).render('500', { page: '404', message: 'Internal Server Error' });
 });
 
 app.get('*', (req, res) => {
@@ -153,11 +256,12 @@ app.get('*', (req, res) => {
   });
 
 legoData.initialize()
-    .then(() => {
-        app.listen(port, () => {
-            console.log(`Server running on port ${port}`);
+    .then(authData.initialize)
+    .then(function () {
+        app.listen(port, function () {
+            console.log(`app listening on: ${port}`);
         });
     })
-    .catch(error => {
-        console.error('Initialization error:', error.message);
+    .catch(function (err) {
+        console.log(`unable to start server: ${err}`);
     });
