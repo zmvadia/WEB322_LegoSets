@@ -22,7 +22,7 @@ let User;
 
 function initialize() {
     return new Promise(function (resolve, reject) {
-        let db = mongoose.createConnection(process.env.MONGODB, { useNewUrlParser: true, useUnifiedTopology: true });
+        let db = mongoose.createConnection(process.env.MONGODB);
         db.on('error', (err) => {
             reject(err); 
         });
@@ -41,9 +41,9 @@ function registerUser(userData) {
 
         try {
             const hashedPassword = await bcrypt.hash(userData.password, 10);
-
+            const trimmedUserName = userData.userName.trim();
             let newUser = new User({
-                userName: userData.userName,
+                userName: trimmedUserName,
                 password: hashedPassword,
                 email: userData.email,
                 loginHistory: []
@@ -64,6 +64,8 @@ function registerUser(userData) {
 
 function checkUser(userData) {
     return new Promise((resolve, reject) => {
+        console.log("Looking for user:", userData.userName);
+
         User.find({ userName: userData.userName })
             .then(async (users) => {
                 if (users.length === 0) {
@@ -72,7 +74,9 @@ function checkUser(userData) {
 
                 const user = users[0];
                 const isMatch = await bcrypt.compare(userData.password, user.password);
-
+                console.log("Stored hashed password:", user.password);
+                console.log("Password match result:", isMatch);
+                
                 if (!isMatch) {
                     return reject(`Incorrect Password for user: ${userData.userName}`);
                 }
@@ -80,7 +84,8 @@ function checkUser(userData) {
                 if (user.loginHistory.length === 8) {
                     user.loginHistory.pop(); 
                 }
-                user.loginHistory.unshift({ 
+
+                user.loginHistory.unshift({
                     dateTime: new Date(),
                     userAgent: userData.userAgent,
                 });
@@ -90,9 +95,9 @@ function checkUser(userData) {
                     { $set: { loginHistory: user.loginHistory } }
                 )
                 .then(() => resolve(user))
-                .catch(err => reject(`Error updating user: ${err}`));
+                .catch(err => reject(`Error updating user: ${err.message}`));
             })
-            .catch(err => reject(`Error finding user: ${err}`));
+            .catch(err => reject(`Error finding user: ${err.message}`));
     });
 }
 module.exports = { initialize, registerUser, checkUser };

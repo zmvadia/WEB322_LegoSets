@@ -57,8 +57,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.static(__dirname + '/public'));
-
 app.use(
     clientSessions({
        cookieName: 'session', // this is the object name that will be added to 'req'
@@ -68,6 +66,7 @@ app.use(
        })
    );
 
+app.use(express.static(__dirname + '/public'));
 
 function ensureLogin(req, res, next) {
     if (!req.session.user) {
@@ -239,6 +238,7 @@ app.post("/login", (req, res) => {
             });
         });
 });
+
 
 app.get("/logout", (req, res) => {
     req.session.reset();
