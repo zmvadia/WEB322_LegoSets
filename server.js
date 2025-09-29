@@ -20,7 +20,7 @@
 
 *
 
-* Published URL:
+* Published URL: https://web-322-lego-sets-j5im9b81f-zainab-mustak-vadias-projects.vercel.app/
 
 *
 
@@ -35,7 +35,7 @@ const mongoose = require('mongoose');
 const uri = process.env.MONGODB; 
 
 if (!uri) {
-  throw new Error('MONGODB_URI environment variable is not set');
+  throw new Error('MONGODB environment variable is not set');
 }
 
 mongoose.connect(uri)
@@ -43,7 +43,6 @@ mongoose.connect(uri)
   .catch(err => console.error('MongoDB connection error:', err));
 
 const app = express();
-const port = 8080;
 
 
 app.set('view engine', 'ejs');
@@ -276,3 +275,5 @@ legoData.initialize()
     .catch(function (err) {
         console.log(`unable to start server: ${err}`);
     });
+
+    module.exports = app;
